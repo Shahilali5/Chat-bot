@@ -1,34 +1,61 @@
-# bot.py
 import requests
+import json
 
-class TgBot:
-    def __init__(self, token, apikey):
+class TGBot:
+    def __init__(self, token, api):
         self.token = token
-        self.apikey = apikey
+        self.apikey = api
 
-    def open_url(self, url, method='POST', data=None):
-        """Send an HTTP request to a given URL."""
+    def open_url(self, url, method, data=None):
         if method == 'POST':
             response = requests.post(url, data=data)
         else:
-            response = requests.get(url, params=data)
-        return response.json()  # Assuming the API returns a JSON response
+            response = requests.get(url)
+        return response.text
 
     def control_api(self, method, data=None):
-        """Send a request to the Telegram Bot API."""
-        url = f"https://api.telegram.org/bot{self.token}/{method}"
-        return self.open_url(url, 'POST', data)
+        return self.open_url(f"https://api.telegram.org/bot{self.token}{method}", "POST", data)
 
-    def send_message(self, to, text, parse_mode='Markdown'):
-        """Send a message to a Telegram chat."""
+    def send_message(self, to, text, parse_mode):
         data = {
             'chat_id': to,
             'text': text,
             'parse_mode': parse_mode
         }
-        return self.control_api('sendMessage', data)
+        return self.control_api("/sendMessage", data)
 
-# Example usage (Replace 'your-telegram-bot-api-key' with actual key):
-# bot = TgBot('your-telegram-bot-api-key', 'your-openai-api-key')
-# response = bot.send_message('chat_id', 'Hello World!')
-# print(response)
+    def send_photo(self, to, photo_url, caption="", parse_mode="HTML"):
+        data = {
+            'chat_id': to,
+            'photo': photo_url,
+            'caption': caption,
+            'parse_mode': parse_mode
+        }
+        return self.control_api("/sendPhoto", data)
+
+    def get_answer(self, q):
+        url = 'https://api.openai.com/v1/engines/text-davinci-003/completions'
+        data = {
+            'prompt': q,
+            'max_tokens': 1024,
+            'temperature': 0.5,
+            'n': 1,
+            'stop': None,
+        }
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {self.apikey}',
+        }
+
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+        if response.status_code != 200:
+            print('Error retrieving response:', response.text)
+            return 'Error retrieving response'
+
+        res = response.json()
+        if 'choices' in res and len(res['choices']) > 0 and 'text' in res['choices'][0]:
+            return res['choices'][0]['text']
+        else:
+            print('Unexpected response format:', res)
+            return 'Unexpected response format'
