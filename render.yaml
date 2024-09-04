@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: my-app
+    name: chat-bot
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python main.py
+    startCommand: python main.py  # Ensure this points to the correct entry script
