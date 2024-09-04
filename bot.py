@@ -16,7 +16,7 @@ class TGBot:
     def control_api(self, method, data=None):
         return self.open_url(f"https://api.telegram.org/bot{self.token}{method}", "POST", data)
 
-    def send_message(self, to, text, parse_mode):
+    def send_message(self, to, text, parse_mode="HTML"):
         data = {
             'chat_id': to,
             'text': text,
@@ -55,7 +55,7 @@ class TGBot:
 
         res = response.json()
         if 'choices' in res and len(res['choices']) > 0 and 'text' in res['choices'][0]:
-            return res['choices'][0]['text']
+            return res['choices'][0]['text'].strip()
         else:
             print('Unexpected response format:', res)
             return 'Unexpected response format'
